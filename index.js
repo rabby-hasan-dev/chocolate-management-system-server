@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -28,13 +28,58 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        const chocolateCollection=client.db('chocolateDB').collection('chocolate');
+        const chocolateCollection = client.db('chocolateDB').collection('chocolate');
 
-        app.get('/addChocolate')
+        app.get('/addChocolate', async (req, res) => {
+            const cursor = chocolateCollection.find();
+            const result = await cursor.toArray();
+            res.send(result);
+
+        })
+
+        // update data viewer
+
+        app.get('/addChocolate/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await chocolateCollection.findOne(query);
+            res.send(result);
+
+
+        })
+
 
         app.post('/addChocolate', async (req, res) => {
-            const chocolate=req.body;
-            const result=await chocolateCollection.insertOne(chocolate);
+            const chocolate = req.body;
+            const result = await chocolateCollection.insertOne(chocolate);
+            res.send(result);
+
+        });
+
+
+        // update data
+        app.put('/addChocolate/:id', async (req, res) => {
+            const id = req.params.id;
+            const chocolate = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateChocolate = {
+                $set: {
+                    name: chocolate.name,
+                    factory: chocolate.factory,
+                    category: chocolate.category,
+                    photo: chocolate.photo,
+                }
+            }
+            const result = await chocolateCollection.updateOne(filter, updateChocolate, options)
+            res.send(result);
+        })
+
+        app.delete('/addChocolate/:id', async (req, res) => {
+            const id = req.params.id;
+
+            const query = { _id: new ObjectId(id) };
+            const result = await chocolateCollection.deleteOne(query);
             res.send(result);
 
         })
